@@ -20,8 +20,7 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(160deg, rgba(158,20,3,.85) 0%, rgba(26,26,26,.80) 100%),
-    url('/images/Jasper.JPG') center/cover no-repeat;
+    linear-gradient(160deg, #7e1008 0%, #1a1a1a 100%);
   color: var(--white);
   text-align: center;
   border-radius: var(--radius);

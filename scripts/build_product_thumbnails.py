@@ -47,6 +47,24 @@ def main():
     for page in sorted(PRODUCTS.glob("*.html")):
         found = product_source(page, previous)
         if found is None:
+            # Preserve already-published optimized variants when a large source
+            # image has been retired. Future reuploads at its original path
+            # will still regenerate those variants on the next build.
+            item = re.search(
+                r'data-storefront-item-id="(\d+)"',
+                page.read_text(encoding="utf-8"),
+            )
+            saved = previous.get(item.group(1)) if item else None
+            if isinstance(saved, dict):
+                paths = [
+                    (ROOT / unquote(urlparse(saved[label]).path).lstrip("/")).resolve()
+                    for label in ("card", "detail")
+                    if isinstance(saved.get(label), str)
+                ]
+                if len(paths) == 2 and all(
+                    OUTPUT in path.parents and path.is_file() for path in paths
+                ):
+                    manifest[item.group(1)] = saved
             continue
         item_id, source, source_path = found
         if item_id in manifest:
