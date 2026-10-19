@@ -281,11 +281,17 @@
         return payload;
     }
 
-    async function fetchCatalog() {
+    // Deduplicate requests from the storefront and its photo controller.
+    let catalogRequest = null;
+    let lastCatalogAttempt = 0;
+    let lastCatalogSuccess = 0;
+
+    async function fetchCatalogOnce() {
         const status = document.querySelector('[data-storefront-status]');
-        if (!status) return;
+        if (!status) return null;
         status.hidden = false;
         status.textContent = 'Loading current inventory…';
+        lastCatalogAttempt = Date.now();
 
         try {
             const [products] = await Promise.all([
@@ -295,16 +301,38 @@
             if (!Array.isArray(products)) throw new Error('Catalog response was invalid.');
             state.products = new Map(products.map(product => [Number(product.item_id), product]));
             state.loaded = true;
+            lastCatalogSuccess = Date.now();
             normalizeCartAgainstCatalog();
             renderProducts(products);
             renderCart();
             handleStorefrontRequest();
             status.hidden = true;
+            window.dispatchEvent(new CustomEvent('rre:catalog-updated', { detail: { products } }));
+            return products;
         } catch (error) {
             console.error('[storefront] catalog error', error);
             status.hidden = false;
             status.innerHTML = 'We could not load current inventory. Please refresh or <a href="mailto:rrereptiles@gmail.com">contact us</a>.';
+            return null;
         }
+    }
+
+    async function fetchCatalog() {
+        if (catalogRequest) return catalogRequest;
+        catalogRequest = fetchCatalogOnce();
+        try {
+            return await catalogRequest;
+        } finally {
+            catalogRequest = null;
+        }
+    }
+
+    function getCatalogSnapshot() {
+        return {
+            products: state.loaded ? Array.from(state.products.values()) : null,
+            lastAttempt: lastCatalogAttempt,
+            lastSuccess: lastCatalogSuccess
+        };
     }
 
     function findStaticCard(panel, product) {
@@ -969,7 +997,7 @@
         fetchCatalog();
     }
 
-    window.RREStorefront = { refresh: fetchCatalog, openCart };
+    window.RREStorefront = { refresh: fetchCatalog, getCatalogSnapshot, openCart };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
     else init();
 })();

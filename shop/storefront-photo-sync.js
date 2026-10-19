@@ -393,12 +393,36 @@
         });
     }
 
+    function useCatalog(catalog) {
+        productsByItemId = new Map(
+            catalog.map(product => [Number(product.item_id), product])
+        );
+        productsByName = new Map(
+            catalog.map(product => [matchingName(product.public_name), product])
+        );
+        applyCatalogState();
+    }
+
     async function refresh({ refreshStorefront = true } = {}) {
         if (refreshPromise) return refreshPromise;
-
         refreshPromise = (async () => {
             try {
                 await loadProductThumbnails();
+                if (window.RREStorefront?.getCatalogSnapshot && window.RREStorefront?.refresh) {
+                    const snapshot = window.RREStorefront.getCatalogSnapshot();
+                    // Browser focus and visibility events often fire together;
+                    // throttle background catalog reads, including after errors.
+                    if (refreshStorefront && Date.now() - snapshot.lastAttempt >= 60000) {
+                        await window.RREStorefront.refresh();
+                    }
+                    const catalog = window.RREStorefront.getCatalogSnapshot().products;
+                    // The main storefront may still be loading. Its completion
+                    // event will update these cards without another request.
+                    if (Array.isArray(catalog)) useCatalog(catalog);
+                    return;
+                }
+
+                // Standalone compatibility for legacy pages without storefront.js.
                 const response = await fetch(CATALOG_URL, {
                     method: 'POST',
                     headers: {
@@ -409,20 +433,9 @@
                     cache: 'no-store'
                 });
                 if (!response.ok) throw new Error(`Catalog request failed (${response.status})`);
-
-                const products = await response.json();
-                const catalog = Array.isArray(products) ? products : [];
-                productsByItemId = new Map(
-                    catalog.map(product => [Number(product.item_id), product])
-                );
-                productsByName = new Map(
-                    catalog.map(product => [matchingName(product.public_name), product])
-                );
-
-                if (refreshStorefront && window.RREStorefront?.refresh) {
-                    await window.RREStorefront.refresh();
-                }
-                applyCatalogState();
+                const catalog = await response.json();
+                if (!Array.isArray(catalog)) throw new Error('Catalog response was invalid.');
+                useCatalog(catalog);
             } catch (error) {
                 console.warn('[storefront] item catalog sync unavailable', error);
                 applyCatalogState();
@@ -430,9 +443,14 @@
                 refreshPromise = null;
             }
         })();
-
         return refreshPromise;
     }
+
+    window.addEventListener('rre:catalog-updated', event => {
+        const products = event.detail?.products;
+        if (!Array.isArray(products)) return;
+        void loadProductThumbnails().then(() => useCatalog(products));
+    });
 
     installCarouselStyles();
 
