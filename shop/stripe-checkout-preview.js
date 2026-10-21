@@ -120,7 +120,7 @@
             const product = map.get(item.itemId);
             return `
                 <div class="checkout-item">
-                    <img src="${escapeHtml(productThumbnails[String(product.item_id)]?.card || 'images/Logo.svg')}" alt="">
+                    <img src="${escapeHtml(productThumbnails[String(product.item_id)]?.card || '/images/Logo.svg')}" alt="">
                     <div>
                         <h3>${escapeHtml(product.public_name)}</h3>
                         <p>Qty ${item.quantity} × ${currency.format(Number(product.price))}</p>

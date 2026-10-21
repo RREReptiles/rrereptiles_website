@@ -18,6 +18,12 @@ OUTPUT = ROOT / "images" / "product-thumbnails"
 MANIFEST = ROOT / "shop" / "product-thumbnails.json"
 
 
+def is_placeholder(source_url: str) -> bool:
+    return unquote(urlparse(source_url).path).lower() in {
+        "/images/logo.svg", "/images/logo letters.png"
+    }
+
+
 def product_source(page: Path, previous: dict):
     text = page.read_text(encoding="utf-8")
     item = re.search(r'data-storefront-item-id="(\d+)"', text)
@@ -26,6 +32,8 @@ def product_source(page: Path, previous: dict):
     saved = previous.get(item.group(1), {}).get("source")
     image = re.search(r'<meta property="og:image" content="([^"]+)"', text)
     source_url = saved or (image.group(1) if image else "")
+    if is_placeholder(source_url):
+        return None
     parsed = urlparse(source_url)
     if parsed.hostname not in {None, "rrereptiles.com", "www.rrereptiles.com"}:
         return None
@@ -56,6 +64,8 @@ def main():
             )
             saved = previous.get(item.group(1)) if item else None
             if isinstance(saved, dict):
+                if is_placeholder(saved.get("source", "")):
+                    continue
                 paths = [
                     (ROOT / unquote(urlparse(saved[label]).path).lstrip("/")).resolve()
                     for label in ("card", "detail")
