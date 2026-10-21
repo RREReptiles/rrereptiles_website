@@ -7,7 +7,7 @@
     const CANCEL_URL = `${SUPABASE_URL}/functions/v1/cancel-stripe-checkout`;
     const CART_STORAGE_KEY = 'rre-storefront-cart-v1';
     const SESSION_STORAGE_KEY = 'rre-stripe-checkout-session-v1';
-    const CORE_SRC = '/shop/preview-gate-core.js?v=20261018-catalog-1';
+    const CORE_SRC = '/shop/preview-gate-core.js?v=20261020-placeholders-1';
     const HOME_EVENTS_SRC = '/shop/home-events.js?v=20260831-2';
     let staleCleanupPromise = Promise.resolve();
     let bootstrapOwnedSession = null;
