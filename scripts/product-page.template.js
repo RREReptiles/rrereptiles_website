@@ -8,7 +8,7 @@
 
     async function loadProductThumbnails() {
         try {
-            const response = await fetch('/shop/product-thumbnails.json');
+            const response = await fetch('/shop/product-thumbnails.json?v=20261020-placeholders-1');
             if (response.ok) productThumbnails = await response.json();
         } catch (_) {
             productThumbnails = {};

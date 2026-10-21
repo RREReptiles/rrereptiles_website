@@ -4,7 +4,7 @@
     const SUPABASE_URL = 'https://zezpkoulxjagljjbyhhk.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_w1szxATkVRFs2JBQOyG8rg_ULipgOPv';
     const CATALOG_URL = `${SUPABASE_URL}/rest/v1/rpc/get_storefront_catalog`;
-    const THUMBNAIL_MANIFEST_URL = '/shop/product-thumbnails.json';
+    const THUMBNAIL_MANIFEST_URL = '/shop/product-thumbnails.json?v=20261020-placeholders-1';
     const CART_STORAGE_KEY = 'rre-storefront-cart-v1';
     const currency = new Intl.NumberFormat('en-US', {
         style: 'currency',
