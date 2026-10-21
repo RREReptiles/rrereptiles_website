@@ -78,7 +78,7 @@
     }
 
     function productImage(product) {
-        return productThumbnails[String(product.item_id)]?.card || 'images/Logo.svg';
+        return productThumbnails[String(product.item_id)]?.card || '/images/Logo.svg';
     }
 
     function productDetailUrl(product) {
@@ -427,7 +427,7 @@
             return;
         }
 
-        if (!placeholder || !productThumbnails[String(product.item_id)]) return;
+        if (!placeholder) return;
 
         const image = document.createElement('img');
         image.src = imageUrl;
